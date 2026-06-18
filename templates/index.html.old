@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>AI 로또 정밀 분석 시스템</title>
+    <style>
+        body { font-family: 'Pretendard', sans-serif; background: #f0f2f5; padding: 20px; display: flex; justify-content: center; }
+        .container { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 600px; text-align: center; }
+        .lotto-row { background: #fff; border: 1px solid #eee; border-radius: 15px; padding: 20px; margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px; cursor: pointer; }
+        .num-group { display: flex; gap: 8px; justify-content: center; }
+        .num-box { width: 40px; height: 40px; line-height: 40px; border-radius: 50%; background: #3498db; color: white; font-weight: bold; }
+        .num-box.matched { background: #f1c40f !important; color: #2c3e50 !important; border: 2px solid #d35400; box-shadow: 0 0 10px rgba(241,196,15,0.5); }
+        .stat-badge { font-size: 0.75rem; padding: 4px 10px; border-radius: 6px; color: white; margin: 0 2px; }
+        .bg-grey { background: #95a5a6; } .bg-orange { background: #f39c12; } .bg-red { background: #e74c3c; }
+        .info-box { font-size: 0.8rem; background: #f8f9fa; padding: 10px; border-radius: 8px; border-left: 4px solid #1a73e8; text-align: left; }
+        button { background: #1a73e8; color: white; border: none; padding: 18px; border-radius: 12px; cursor: pointer; font-size: 1.1rem; width: 100%; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>AI 로또 정밀 분석</h1>
+        <div id="result-list"></div>
+        <button id="mainBtn" onclick="runAnalysis()">최적 조합 10선 분석 시작</button>
+    </div>
+    <script>
+        async function runAnalysis() {
+            const btn = document.getElementById('mainBtn');
+            const list = document.getElementById('result-list');
+            btn.innerText = "데이터 시뮬레이션 및 전 회차 대조 중...";
+            btn.disabled = true;
+            try {
+                const res = await fetch('/api/generate');
+                const data = await res.json();
+                list.innerHTML = '';
+                data.results.forEach(item => {
+                    const row = document.createElement('div');
+                    row.className = 'lotto-row';
+                    row.onclick = () => window.location.href = `/check_history?nums=${item.numbers.join(',')}`;
+                    const numHtml = item.numbers.map(n => `<div class="num-box ${item.stats.last_matches.includes(n) ? 'matched' : ''}">${n}</div>`).join('');
+                    const infoHtml = item.stats.last_ro > 0 ? `<div class="info-box"><div style="color:#1a73e8; font-weight:600;">🎯 과거 ${item.stats.last_ro}회차 주요 당첨 기록</div><div style="color:#d35400; font-size:0.75rem;">당시 일치 숫자: ${item.stats.last_matches.join(', ')}</div></div>` : `<div class="info-box" style="color:#999">주요 당첨 기록 없음</div>`;
+                    row.innerHTML = `<div class="num-group">${numHtml}</div><div class="stats-group"><span class="stat-badge bg-grey">5등: ${item.stats.match3}회</span><span class="stat-badge bg-orange">4등: ${item.stats.match4}회</span>${item.stats.match5 > 0 ? `<span class="stat-badge bg-red">3등↑: ${item.stats.match5}회</span>` : ''}</div>${infoHtml}`;
+                    list.appendChild(row);
+                });
+            } finally {
+                btn.innerText = "최적 조합 10선 분석 시작";
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>

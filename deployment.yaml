@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lotto-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: lotto-app
+  template:
+    metadata:
+      labels:
+        app: lotto-app
+    spec:
+      imagePullSecrets:
+        - name: lotto-key
+      containers:
+      - name: lotto-container
+        image: daehyunpark/lotto-predictor:v1.0
+        ports:
+        - containerPort: 5000

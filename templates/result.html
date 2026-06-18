@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>과거 당첨 상세 내역</title>
+    <style>
+        body { font-family: 'Pretendard', sans-serif; background: #f4f7f9; padding: 40px; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); }
+        h1 { color: #1a73e8; text-align: center; }
+        .user-nums { display: flex; justify-content: center; gap: 10px; margin: 20px 0; padding: 20px; background: #eef2f7; border-radius: 12px; }
+        .num-box { width: 40px; height: 40px; line-height: 40px; text-align: center; border-radius: 50%; background: #3498db; color: white; font-weight: bold; }
+        .result-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .result-table th, .result-table td { padding: 15px; border-bottom: 1px solid #eee; text-align: center; }
+        .result-table th { background: #f8f9fa; color: #666; }
+        .match-tag { padding: 4px 10px; border-radius: 4px; font-weight: bold; }
+        .match-3 { background: #95a5a6; color: white; }
+        .match-4 { background: #f39c12; color: white; }
+        .match-5 { background: #e74c3c; color: white; }
+        .back-btn { display: block; width: 100px; margin: 30px auto; text-align: center; padding: 10px; background: #666; color: white; text-decoration: none; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>분석 번호 과거 기록</h1>
+        <div class="user-nums">
+            {% for n in user_nums %}
+            <div class="num-box">{{ n }}</div>
+            {% endfor %}
+        </div>
+
+        <table class="result-table">
+            <thead>
+                <tr>
+                    <th>회차</th>
+                    <th>당첨 번호</th>
+                    <th>일치 개수</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for res in results %}
+                <tr>
+                    <td><strong>{{ res.ro }}회</strong></td>
+                    <td>{{ res.nums | join(', ') }}</td>
+                    <td>
+                        <span class="match-tag match-{{ res.match }}">
+                            {{ res.match }}개 일치 ({{ '5등' if res.match == 3 else '4등' if res.match == 4 else '3등 이상' }})
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        <a href="/" class="back-btn">돌아가기</a>
+    </div>
+</body>
+</html>

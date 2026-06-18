@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 로또 정밀 분석 시스템</title>
+    <style>
+        :root {
+            --primary-color: #1a73e8;
+            --bg-color: #f0f2f5;
+            --card-bg: #ffffff;
+            --text-main: #2c3e50;
+            --accent-yellow: #f1c40f;
+        }
+
+        body { 
+            font-family: 'Pretendard', -apple-system, sans-serif; 
+            background: var(--bg-color); 
+            margin: 0; 
+            padding: 20px; 
+            display: flex; 
+            justify-content: center; 
+        }
+
+        .container { 
+            background: var(--card-bg); 
+            padding: 30px; 
+            border-radius: 24px; 
+            box-shadow: 0 12px 40px rgba(0,0,0,0.12); 
+            width: 100%; 
+            max-width: 620px; 
+            text-align: center; 
+        }
+
+        h1 { color: var(--primary-color); margin-bottom: 8px; font-size: 1.8rem; }
+        .desc { color: #666; font-size: 0.95rem; margin-bottom: 30px; line-height: 1.5; }
+        
+        /* 로또 번호 행 디자인 */
+        .lotto-row { 
+            background: #fff; 
+            border: 1px solid #edf2f7; 
+            border-radius: 18px; 
+            padding: 22px; 
+            margin-bottom: 16px; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 14px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .lotto-row:hover { 
+            border-color: var(--primary-color); 
+            transform: translateY(-4px); 
+            box-shadow: 0 8px 20px rgba(26,115,232,0.1); 
+        }
+
+        /* 번호 박스 스타일 */
+        .num-group { display: flex; gap: 10px; justify-content: center; }
+        .num-box { 
+            width: 42px; 
+            height: 42px; 
+            line-height: 42px; 
+            text-align: center; 
+            border-radius: 50%; 
+            background: #e2e8f0; 
+            color: #4a5568; 
+            font-weight: 700; 
+            font-size: 1.05rem;
+            border: 2px solid transparent;
+        }
+
+        /* 과거 당첨 숫자 하이라이트 */
+        .num-box.matched { 
+            background: var(--accent-yellow) !important; 
+            color: #2c3e50 !important;
+            border: 2px solid #d35400; 
+            box-shadow: 0 0 12px rgba(241,196,15,0.6);
+        }
+
+        /* 등수 통계 배지 */
+        .stats-group { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; }
+        .stat-badge { 
+            font-size: 0.78rem; 
+            padding: 5px 12px; 
+            border-radius: 8px; 
+            color: white; 
+            font-weight: 600;
+        }
+        .bg-grey { background: #94a3b8; }   /* 5등 */
+        .bg-orange { background: #ed8936; } /* 4등 */
+        .bg-red { background: #e53e3e; box-shadow: 0 2px 6px rgba(229,62,62,0.3); } /* 3등 이상 */
+        
+        /* 상세 정보 박스 */
+        .info-box { 
+            font-size: 0.82rem; 
+            background: #f8fafc; 
+            padding: 12px; 
+            border-radius: 12px; 
+            border-left: 5px solid var(--primary-color); 
+            text-align: left;
+        }
+        .info-line { color: var(--primary-color); font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; }
+        .match-line { color: #718096; font-size: 0.78rem; }
+
+        /* 분석 버튼 */
+        button#mainBtn { 
+            background: var(--primary-color); 
+            color: white; 
+            border: none; 
+            padding: 20px; 
+            border-radius: 16px; 
+            cursor: pointer; 
+            font-size: 1.15rem; 
+            font-weight: 800;
+            width: 100%; 
+            margin-top: 15px; 
+            transition: 0.2s;
+            box-shadow: 0 4px 12px rgba(26,115,232,0.3);
+        }
+        button#mainBtn:hover { background: #1557b0; }
+        button#mainBtn:disabled { background: #cbd5e1; cursor: wait; box-shadow: none; }
+
+        /* 로딩 애니메이션 (선택사항) */
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+        .loading-text { animation: pulse 1.5s infinite; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>AI 로또 정밀 분석</h1>
+        <p class="desc">GAN 알고리즘이 생성한 조합을 역대 전 회차 데이터와<br>실시간 대조하여 최적의 조합 10선을 추출합니다.</p>
+        
+        <div id="result-list">
+            </div>
+
+        <button id="mainBtn" onclick="runAnalysis()">최적 조합 10선 분석 시작</button>
+    </div>
+
+    <script>
+        async function runAnalysis() {
+            const btn = document.getElementById('mainBtn');
+            const list = document.getElementById('result-list');
+            
+            btn.innerHTML = '<span class="loading-text">데이터 시뮬레이션 및 전 회차 대조 중...</span>';
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/generate');
+                const data = await res.json();
+                
+                if (data.results) {
+                    list.innerHTML = '';
+                    data.results.forEach(item => {
+                        const row = document.createElement('div');
+                        row.className = 'lotto-row';
+                        
+                        // 클릭 시 상세 페이지 이동 (기존 기능 유지)
+                        row.onclick = () => window.location.href = `/check_history?nums=${item.numbers.join(',')}`;
+                        
+                        // 1. 번호 생성 및 하이라이트 처리
+                        const numHtml = item.numbers.map(n => {
+                            const isMatched = item.stats.last_matches.includes(n);
+                            return `<div class="num-box ${isMatched ? 'matched' : ''}">${n}</div>`;
+                        }).join('');
+                        
+                        // 2. 정확한 등수별 통계 배지 구성
+                        let statHtml = `
+                            <span class="stat-badge bg-grey">5등(3개): ${item.stats.match3}회</span>
+                            <span class="stat-badge bg-orange">4등(4개): ${item.stats.match4}회</span>
+                        `;
+                        
+                        // 3등(5개 일치) 또는 1등(6개 일치) 기록이 있을 때만 빨간 배지 표시
+                        const highRanks = item.stats.match5 + item.stats.match6;
+                        if (highRanks > 0) {
+                            statHtml += `<span class="stat-badge bg-red">★ 3등이상: ${highRanks}회</span>`;
+                        }
+
+                        // 3. 하단 상세 정보 박스 (최신 당첨 기록 중심)
+                        const infoHtml = item.stats.last_ro > 0 
+                            ? `<div class="info-box">
+                                <div class="info-line">🎯 과거 ${item.stats.last_ro}회차 주요 당첨 기록</div>
+                                <div class="match-line">당시 일치 숫자: ${item.stats.last_matches.join(', ')}</div>
+                               </div>`
+                            : `<div class="info-box" style="border-left-color:#cbd5e1; color:#94a3b8">과거 4등 이상 당첨 기록이 없는 새로운 조합입니다.</div>`;
+
+                        row.innerHTML = `
+                            <div class="num-group">${numHtml}</div>
+                            <div class="stats-group">${statHtml}</div>
+                            ${infoHtml}
+                        `;
+                        list.appendChild(row);
+                    });
+                }
+            } catch (e) {
+                alert("분석 서버 응답이 지연되고 있습니다. 잠시 후 다시 시도해주세요.");
+            } finally {
+                btn.innerText = "최적 조합 10선 분석 시작";
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
